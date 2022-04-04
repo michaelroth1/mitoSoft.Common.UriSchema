@@ -5,7 +5,7 @@ namespace mitoSoft.Common.UriSchema
 {
     public class RegistryHelper
     {
-        public static void RegisterScheme(string uriSchema, string applicationPath)
+        public static void RegisterScheme(string uriSchema, string applicationPath, bool asFirstArg)
         {
             using var key = Registry.CurrentUser.CreateSubKey("SOFTWARE\\Classes\\" + uriSchema);
 
@@ -17,8 +17,13 @@ namespace mitoSoft.Common.UriSchema
                 defaultIcon.SetValue("", applicationPath + ",1");
             }
 
+            string extension = "";
+            if (asFirstArg)
+            {
+                extension = " \"%1\"";
+            }
             using var commandKey = key.CreateSubKey(@"shell\open\command");
-            commandKey.SetValue("", "\"" + applicationPath + "\" \"%1\"");
+            commandKey.SetValue("", $"\"{applicationPath}\"{extension}");
         }
 
         public static string? IsRegistered(string uriSchema)
@@ -37,7 +42,7 @@ namespace mitoSoft.Common.UriSchema
             }
 
             var value = commandKey.GetValue("");
-            
+
             string path = ParseValueToPath(value);
 
             return path;
@@ -56,7 +61,7 @@ namespace mitoSoft.Common.UriSchema
                 path = path.Replace(" %1", "");
                 return path;
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 throw new Exception($"Value '{value?.ToString()}' not possible to parse: {ex.Message}");
             }
